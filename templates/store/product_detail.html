@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <!-- Product Image -->
+        <div class="col-md-6">
+            <img class="img-fluid rounded" src="{{ product.imageURL }}" alt="{{ product.name }}">
+        </div>
+        <!-- Product Details -->
+        <div class="col-md-6">
+            <h1 class="display-5 fw-bolder">{{ product.name }}</h1>
+            <div class="fs-5 mb-3">
+                <span>${{ product.price|floatformat:2 }}</span>
+            </div>
+            <p class="lead">{{ product.description }}</p>
+            <div class="d-flex">
+                <button data-product="{{ product.id }}" data-action="add" class="btn btn-outline-dark flex-shrink-0 update-cart" type="button">
+                    <i class="bi-cart-fill me-1"></i>
+                    Add to cart
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Reviews Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Product Reviews</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Form to add a new review -->
+                    {% if user.is_authenticated %}
+                    <h5 class="mb-3">Leave a Review</h5>
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="rating" class="form-label">Rating</label>
+                            <select name="rating" id="rating" class="form-select" required>
+                                <option value="5">5 - Excellent</option>
+                                <option value="4">4 - Good</option>
+                                <option value="3">3 - Average</option>
+                                <option value="2">2 - Fair</option>
+                                <option value="1">1 - Poor</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="review_text" class="form-label">Review</label>
+                            <textarea name="review_text" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit Review</button>
+                    </form>
+                    <hr>
+                    {% else %}
+                    <p><a href="{% url 'login' %}?next={{ request.path }}">Log in</a> to leave a review.</p>
+                    <hr>
+                    {% endif %}
+                    
+                    <!-- Display existing reviews -->
+                    <h5 class="mb-3">What others are saying</h5>
+                    {% if reviews %}
+                        {% for review in reviews %}
+                        <div class="d-flex mb-3">
+                            <div class="flex-shrink-0">
+                                <!-- You can add user avatars here if you extend the Customer model -->
+                                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                    <span>{{ review.user.username.0|upper }}</span>
+                                </div>
+                            </div>
+                            <div class="ms-3">
+                                <div class="fw-bold">{{ review.user.username }}</div>
+                                <div class="text-warning">
+                                    {% for i in "x"|ljust:review.rating %}★{% endfor %}
+                                    {% for i in "x"|ljust:review.rating|add:"-5"|cut:"-" %}☆{% endfor %}
+                                </div>
+                                {{ review.review_text }}
+                                <div class="text-muted small mt-1">{{ review.created_at|date:"F d, Y" }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                    <p>No reviews yet. Be the first to review this product!</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+{% if items %}
+    <div class="row">
+        <!-- Shipping & Payment Information Column -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <form id="form" novalidate>
+                        <!-- 'novalidate' prevents default browser validation bubbles, so we can control them with JS -->
+                        
+                        <!-- No #user-info div is needed since we force login -->
+                        
+                        <div id="shipping-info">
+                            <h5>Shipping Information</h5>
+                            <hr>
+                            <div class="mb-3">
+                                <input class="form-control" type="text" name="address" placeholder="Address.." required>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <input class="form-control" type="text" name="city" placeholder="City.." required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <input class="form-control" type="text" name="state" placeholder="State.." required>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <input class="form-control" type="text" name="zipcode" placeholder="Zip Code.." required>
+                                </div>
+                            </div>
+
+                            <h5>Contact Information</h5>
+                            <hr>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <input class="form-control" type="tel" name="mobile_number" placeholder="Mobile Number (Required)" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <input class="form-control" type="tel" name="alt_mobile_number" placeholder="Alternate Mobile (Optional)">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PAYMENT METHOD SELECTION -->
+                        <hr>
+                        <h5>Payment Method</h5>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="paymentMethod" id="cod" value="COD" checked>
+                            <label class="form-check-label" for="cod">
+                                Cash on Delivery (COD)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="paymentMethod" id="paypal" value="PayPal">
+                            <label class="form-check-label" for="paypal">
+                                Card / UPI / NetBanking (via PayPal)
+                            </label>
+                        </div>
+                        
+                        <!-- COD Button -->
+                        <div id="cod-button-container" class="d-grid mt-4">
+                            <button id="cod-form-button" class="btn btn-primary btn-lg" type="submit">Place Order</button>
+                        </div>
+                        
+                        <!-- PayPal Buttons -->
+                        <div id="paypal-button-container" class="mt-4" style="display: none;"></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary Column -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <a class="btn btn-outline-dark mb-3" href="{% url 'cart' %}">← Back to Cart</a>
+                    <hr>
+                    <h3>Order Summary</h3>
+                    <hr>
+                    {% for item in items %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center">
+                            <img class="img-fluid rounded me-3" src="{{ item.product.imageURL }}" style="width: 60px;">
+                            <span>{{ item.product.name }}</span>
+                        </div>
+                        <div>
+                            <span>{{ item.quantity }}x</span>
+                        </div>
+                        <div>
+                            <span>${{ item.get_total|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <hr>
+                    <h5 class="d-flex justify-content-between"><span>Total:</span> <strong>${{ order.get_cart_total|floatformat:2 }}</strong></h5>
+                </div>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="alert alert-info text-center" role="alert">
+        <h4 class="alert-heading">Your Cart is Empty!</h4>
+        <p>You have no items in your shopping cart. Please add some products before you can checkout.</p>
+        <hr>
+        <a href="{% url 'store' %}" class="btn btn-primary">Continue Shopping</a>
+    </div>
+{% endif %}
+
+<script type="text/javascript">
+    // This script will only execute if there are items in the cart,
+    // which means the form and its elements are present on the page.
+    {% if items %}
+    var total = '{{ order.get_cart_total|floatformat:2 }}';
+    {% comment %} var csrftoken = '{{ csrf_token }}'; {% endcomment %}
+    const form = document.getElementById('form');
+
+    // --- The Main Event Listener ---
+    // This is the most important part. We listen for the 'submit' event on the form itself.
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // ALWAYS prevent the default page reload.
+            e.preventDefault(); 
+            console.log('Form submission intercepted by JavaScript!');
+            
+            // At this point, we know the user clicked the "Place Order" (type="submit") button.
+            // So, we can proceed with the COD logic.
+            if (form.checkValidity()) {
+                submitFormData('COD');
+            } else {
+                // If fields are missing, let the browser show the validation messages.
+                form.reportValidity();
+            }
+        });
+    }
+
+    // --- Logic for Toggling Payment Options ---
+    const paymentMethodRadios = document.querySelectorAll('input[name="paymentMethod"]');
+    const codContainer = document.getElementById('cod-button-container');
+    const paypalContainer = document.getElementById('paypal-button-container');
+
+    if (paymentMethodRadios.length > 0) {
+        paymentMethodRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.value === 'COD') {
+                    codContainer.style.display = 'block';
+                    paypalContainer.style.display = 'none';
+                } else {
+                    codContainer.style.display = 'none';
+                    paypalContainer.style.display = 'block';
+                }
+            });
+        });
+    }
+
+    // --- PayPal Button Rendering ---
+    // The PayPal flow does NOT use the form's submit event. It has its own 'onApprove' flow.
+    if (document.getElementById('paypal-button-container')) {
+        paypal.Buttons({
+            style: { color: 'blue', shape: 'rect', label: 'pay', height: 55 },
+            createOrder: (data, actions) => {
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return actions.reject();
+                }
+                return actions.order.create({
+                    purchase_units: [{ amount: { value: total } }]
+                });
+            },
+            onApprove: (data, actions) => {
+                return actions.order.capture().then(function(details) {
+                    // Call the same function, but for the PayPal flow.
+                    submitFormData('PayPal', details);
+                });
+            }
+        }).render('#paypal-button-container');
+    }
+
+    // --- Universal Function to Submit Data to Backend ---
+    function submitFormData(paymentMethod, transactionDetails = null) {
+        console.log('Submitting order with payment method:', paymentMethod);
+        const codSubmitButton = document.getElementById('cod-form-button');
+
+        const userFormData = { 'total': total };
+        const shippingInfo = {
+            'address': form.address.value,
+            'city': form.city.value,
+            'state': form.state.value,
+            'zipcode': form.zipcode.value,
+            'mobile_number': form.mobile_number.value,
+            'alt_mobile_number': form.alt_mobile_number.value,
+        };
+
+        if (codSubmitButton) codSubmitButton.disabled = true;
+
+        const url = "/process_order/";
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+            body: JSON.stringify({
+                'form': userFormData,
+                'shipping': shippingInfo,
+                'payment_method': paymentMethod,
+                'paypal_details': transactionDetails
+            })
+        })
+        .then(response => response.json().then(data => ({ ok: response.ok, data })))
+        .then(({ ok, data }) => {
+            if (!ok) { throw new Error(data.error || 'An unknown error occurred.'); }
+            alert('Order placed successfully!');
+            window.location.href = "{% url 'store' %}";
+        })
+        .catch(error => {
+            console.error('Error submitting form data:', error);
+            alert('Error: ' + error.message);
+            if (codSubmitButton) codSubmitButton.disabled = false;
+        });
+    }
+    {% endif %}
+</script>
+
+{% endblock content %}

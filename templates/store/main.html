@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+    <!-- Filters Sidebar -->
+    <div class="col-lg-3">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Categories</h5>
+            </div>
+            <ul class="list-group list-group-flush">
+                <a href="{% url 'store' %}" class="list-group-item list-group-item-action {% if not selected_category %}active{% endif %}">All Products</a>
+                {% for category in categories %}
+                <a href="{% url 'store' %}?category={{category.id}}" class="list-group-item list-group-item-action {% if selected_category == category.id %}active{% endif %}">
+                    {{category.name}}
+                </a>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Search</h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" action="{% url 'store' %}">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="q" placeholder="Search products..." value="{{ query|default:'' }}">
+                        <button class="btn btn-outline-primary" type="submit">Go</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="col-lg-9">
+        {% if featured_products and not query and not selected_category %}
+        <div class="mb-5">
+            <h3>Featured Products</h3>
+            <hr>
+            <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-3 justify-content-center">
+                {% for product in featured_products %}
+                <div class="col mb-5">
+                    <div class="card h-100 product-card">
+                        <a href="{% url 'product_detail' product.id %}">
+                           <img class="card-img-top" src="{{ product.imageURL }}" alt="..." />
+                        </a>
+                        <div class="card-body p-4">
+                            <div class="text-center">
+                                <h5 class="fw-bolder">{{ product.name }}</h5>
+                                ${{ product.price|floatformat:2 }}
+                            </div>
+                        </div>
+                        <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
+                            <div class="text-center">
+                                <button data-product="{{product.id}}" data-action="add" class="btn btn-outline-dark mt-auto update-cart">Add to cart</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <h3>{% if selected_category %}{{ products.0.category.name }}{% else %}All Products{% endif %}</h3>
+        <hr>
+        <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-3 justify-content-center">
+            {% for product in products %}
+            <div class="col mb-5">
+                <div class="card h-100 product-card">
+                    <a href="{% url 'product_detail' product.id %}">
+                       <img class="card-img-top" src="{{ product.imageURL }}" alt="..." />
+                    </a>
+                    <div class="card-body p-4">
+                        <div class="text-center">
+                            <h5 class="fw-bolder">{{ product.name }}</h5>
+                            ${{ product.price|floatformat:2 }}
+                        </div>
+                    </div>
+                    <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
+                        <div class="text-center">
+                           <button data-product="{{product.id}}" data-action="add" class="btn btn-outline-dark mt-auto update-cart">Add to cart</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock content %}

@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <a class="btn btn-outline-dark" href="{% url 'store' %}">← Continue Shopping</a>
+                    <div class="d-flex align-items-center">
+                        <h5 class="me-4 mb-0">Items: <strong>{{ order.get_cart_items }}</strong></h5>
+                        <h5 class="me-4 mb-0">Total: <strong>${{ order.get_cart_total|floatformat:2 }}</strong></h5>
+                        
+                        {% if items %}
+                        <a class="btn btn-success" href="{% url 'checkout' %}">Checkout</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if not items %}
+            <div class="alert alert-info text-center" role="alert">
+                <h4 class="alert-heading">Your Cart is Empty!</h4>
+                <p>Looks like you haven't added any items to your cart yet.</p>
+            </div>
+        {% else %}
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr class="text-center">
+                                    <th scope="col" style="width: 15%;">Product</th>
+                                    <th scope="col" style="width: 30%;"> </th>
+                                    <th scope="col" style="width: 15%;">Price</th>
+                                    <th scope="col" style="width: 25%;">Quantity</th>
+                                    <th scope="col" style="width: 15%;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in items %}
+                                <tr class="text-center">
+                                    <td>
+                                        <a href="{% url 'product_detail' item.product.id %}">
+                                            <img class="img-fluid rounded" src="{{ item.product.imageURL }}" style="width: 100px;">
+                                        </a>
+                                    </td>
+                                    <td class="text-start">
+                                        <a href="{% url 'product_detail' item.product.id %}" class="text-dark text-decoration-none">
+                                            {{ item.product.name }}
+                                        </a>
+                                    </td>
+                                    <td>${{ item.product.price|floatformat:2 }}</td>
+                                    <td>
+                                        <div class="input-group justify-content-center">
+                                            <!-- REMOVE ONE BUTTON -->
+                                            <button class="btn btn-outline-secondary update-cart" type="button" data-product="{{ item.product.id }}" data-action="remove">-</button>
+                                            <!-- QUANTITY DISPLAY -->
+                                            <span class="input-group-text" style="min-width: 50px;">{{ item.quantity }}</span>
+                                            <!-- ADD ONE BUTTON -->
+                                            <button class="btn btn-outline-secondary update-cart" type="button" data-product="{{ item.product.id }}" data-action="add">+</button>
+                                            <!-- DELETE ITEM BUTTON -->
+                                            <button class="btn btn-outline-danger update-cart ms-2" type="button" data-product="{{ item.product.id }}" data-action="delete">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                                  <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                                                  <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td><strong>${{ item.get_total|floatformat:2 }}</strong></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock content %}

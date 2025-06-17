@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6 col-xl-5">
+            <div class="card shadow-lg border-0 rounded-lg mt-5">
+                <div class="card-header">
+                    <h3 class="text-center font-weight-light my-4">Create an Account</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{% url 'register' %}">
+                        {% csrf_token %}
+
+                        <!-- Display Non-Field Errors (e.g., global form issues) -->
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger" role="alert">
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <!-- Username Field -->
+                        <div class="mb-3">
+                            <label for="{{ form.username.id_for_label }}" class="form-label">{{ form.username.label }}</label>
+                            {{ form.username }}
+                            {% if form.username.help_text %}
+                                <div class="form-text">{{ form.username.help_text|safe }}</div>
+                            {% endif %}
+                            {% for error in form.username.errors %}
+                                <div class="alert alert-danger p-1 mt-1 small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Email Field -->
+                        <div class="mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }}</label>
+                            {{ form.email }}
+                             {% for error in form.email.errors %}
+                                <div class="alert alert-danger p-1 mt-1 small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="row">
+                            <!-- Password Field -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.password1.id_for_label }}" class="form-label">{{ form.password1.label }}</label>
+                                {{ form.password1 }}
+                                {% for error in form.password1.errors %}
+                                    <div class="alert alert-danger p-1 mt-1 small">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Password Confirmation Field -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.password2.id_for_label }}" class="form-label">{{ form.password2.label }}</label>
+                                {{ form.password2 }}
+                                {% for error in form.password2.errors %}
+                                    <div class="alert alert-danger p-1 mt-1 small">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Password Help Text (Validation Rules) -->
+                        {% if form.password1.help_text %}
+                            <div class="form-text mb-3">{{ form.password1.help_text|safe }}</div>
+                        {% endif %}
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-warning btn-lg">Register</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center py-3">
+                    <div class="small">
+                        <a href="{% url 'login' %}">Already have an account? Login here</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom styles for better list formatting in help text -->
+<style>
+    .form-text ul {
+        padding-left: 1.2rem;
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}
